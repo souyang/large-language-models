@@ -74,9 +74,9 @@ display(pdf)
 # MAGIC Source: [How to use FAISS to build your first similarity search by Asna Shafiq](https://medium.com/loopio-tech/how-to-use-faiss-to-build-your-first-similarity-search-bf0f708aa772).
 
 # COMMAND ----------
-
+# Sentence Transformer is a Python framework for sentence text and image embeddings.
 from sentence_transformers import InputExample
-
+# Get first 1000 records
 pdf_subset = pdf.head(1000)
 
 def example_create_fn(doc1: pd.Series) -> InputExample:
@@ -119,16 +119,22 @@ len(faiss_title_embedding), len(faiss_title_embedding[0])
 
 import numpy as np
 import faiss
-
+# FAISS doing the index
 pdf_to_index = pdf_subset.set_index(["id"], drop=False)
+# ids is now store in the array, the array contains all the vector ids
 id_index = np.array(pdf_to_index.id.values).flatten().astype("int")
 
+# we need to normalize it to unit length so that dot product will be equal to cosine similarity
 content_encoded_normalized = faiss_title_embedding.copy()
 faiss.normalize_L2(content_encoded_normalized)
 
 # Index1DMap translates search results to IDs: https://faiss.ai/cpp_api/file/IndexIDMap_8h.html#_CPPv4I0EN5faiss18IndexIDMapTemplateE
 # The IndexFlatIP below builds index
-index_content = faiss.IndexIDMap(faiss.IndexFlatIP(len(faiss_title_embedding[0])))
+# IP stands for Inner Project, by calling this api, we maximizing the inner product between the query and between the items retrieved.
+# Flat means storing all vectors without compression, storaging
+# IndexIDMap is a function to maintain mapping between vectors and vectorIds.
+index_content = faiss.IndexIDMap(faiss.IndexFlatIP(len(faiss_title_embedding[0]))
+# id_index is the index we created.
 index_content.add_with_ids(content_encoded_normalized, id_index)
 
 # COMMAND ----------
